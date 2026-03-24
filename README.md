@@ -1,4 +1,4 @@
-What determines whether an individual HSC chooses to self-renew or differentiate? And is this decision HERITABLE—does one HSC's choice influence what its daughter cells do? -> clonal fate bias or lineage commitment.
+What determines whether an individual HSC chooses to self-renew or differentiate? And is this decision HERITABLE - does one HSC's choice influence what its daughter cells do? -> clonal fate bias or lineage commitment.
 
 method: 
 1. Add unique DNA barcode to EACH HSC
