@@ -1,7 +1,7 @@
 #Annotation
 #Use singleR and Immgen
 BiocManager::install("SingleR")
-BiocManager::install("celldex")
+BiocManager::install("BiocManager")
 #finding reference dataset in celldex
 library(celldex)
 library(SingleR)
