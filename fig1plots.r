@@ -53,7 +53,8 @@ dev.off()
 #Compare with BM dataset
 ST227.sce.fig <- as.SingleCellExperiment(ST227, assay = "sketch_RNA")
 
-# put the nvstb cells in directory!
+# automatically annotate using this prior dataset
+
 
 ref <- fetchReference("novershtern_hematopoietic", "2024-02-26")
 pred.main <- SingleR(test = ST227.sce.fig, ref = ref, labels = ref$label.main)
