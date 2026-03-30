@@ -39,7 +39,7 @@ library(gplots)
 library(tidyverse)
 library(viridis)
 library(scater)
-library(umap)
+library()
 library(RColorBrewer)
 library(viridis) 
 library(VennDiagram)
@@ -209,6 +209,90 @@ dt <- dt[,c(1:40,56:95)]
 dt <- dt[,!grepl("Rest", names(dt))]
 dt <- dt[rowSums(dt)>0,]
 
+# checking parameters for umap cos similarity, 
+n_neighbors_grid <- c(15, 30, 50, 100)
+min_dist_grid    <- c(0.1, 0.3, 0.5, 0.8)
+library(umap)
+library(RDRToolbox)
+library(cluster)
+
+run_umap_eval <- function(data, nn, md, cluster_labels = NULL, fate_bias = NULL) {
+  
+  u <- umap(data,
+            n_neighbors = nn,
+            min_dist = md,
+            metric = "cosine",
+            spread = 10)
+  
+  emb <- u$layout
+  
+  # --- Metric 1: trustworthiness ---
+  trust <- trustworthiness(data, emb, k = 10)
+  
+  # --- Metric 2: silhouette ---
+  sil <- NA
+  if (!is.null(cluster_labels)) {
+    sil_obj <- silhouette(cluster_labels, dist(emb))
+    sil <- mean(sil_obj[, 3])
+  }
+  
+  # --- Metric 3: biological correlation ---
+  bio_cor <- NA
+  if (!is.null(fate_bias)) {
+    bio_cor <- cor(emb[,1], fate_bias, method = "spearman")
+  }
+  
+  return(data.frame(
+    n_neighbors = nn,
+    min_dist = md,
+    trustworthiness = trust,
+    silhouette = sil,
+    bio_correlation = bio_cor
+  ))
+}
+results <- data.frame()
+
+for (nn in n_neighbors_grid) {
+  for (md in min_dist_grid) {
+    
+    cat("Running nn =", nn, "min_dist =", md, "\n")
+    
+    res <- run_umap_eval(
+      data = dt[,1:40],               # your matrix
+      nn = nn,
+      md = md,
+      cluster_labels = dt$cluster,    # optional
+      fate_bias = dt$fate_bias        # optional
+    )
+    
+    results <- rbind(results, res)
+  }
+}
+library(ggplot2)
+
+# Trustworthiness
+ggplot(results, aes(x = n_neighbors, y = trustworthiness, color = factor(min_dist))) +
+  geom_line() + geom_point(size = 2) +
+  theme_minimal()
+
+# Biological signal
+ggplot(results, aes(x = n_neighbors, y = bio_correlation, color = factor(min_dist))) +
+  geom_line() + geom_point(size = 2) +
+  theme_minimal()
+
+# Silhouette (if using clusters)
+ggplot(results, aes(x = n_neighbors, y = silhouette, color = factor(min_dist))) +
+  geom_line() + geom_point(size = 2) +
+  theme_minimal()
+results$score <- with(results,
+  scale(trustworthiness) +
+  scale(bio_correlation) +
+  scale(silhouette)
+)
+
+results[order(-results$score), ]
+
+# end my code. 
 
 #Run 1dumap
 u1d <- umap(dt[,1:70] ,metric="cosine", min_dist=0.8, bandwidth=50, n_neighbors=30, negative_sample_rate=20,         spread=10, n_components=1)
@@ -220,11 +304,9 @@ colnames(m1d) <- rownames(u1d$knn$indexes)
 
 #add values to matrix where there is a connection between 2 barcodes
 t <- u1d$knn$indexes
-for (i in 1:dim(t)[1]) {
-  for (j in 1:dim(t)[2]) {
-    m1d[i,t[i,j]] = 1
-  }
-}
+rows <- rep(1:nrow(t), times = ncol(t))
+cols <- as.vector(t)
+m1d[cbind(rows, cols)] <- 1
 
 
 cluster_30 <- leiden(m1d, resolution_parameter = 0.95)
@@ -238,7 +320,7 @@ dt$cluster <- cluster_30
 
 dt_A <- dt[,grepl("_PA", names(dt))]
 names(dt_A) <- gsub("_PA", "", names(dt_A))
-dt_A$umap1d <- u1d30$layout[,1]
+dt_A$umap1d <- u1d$layout[,1]
 dt_A$cluster_30 <- cluster_30
 dt_A$patient <- substr(row.names(dt_A),22,22)
 dt_A <- select(dt_A , D7_cDC1, D10_cDC1, D14_cDC1, D17_cDC1, D21_cDC1, D7_cDC2, D10_cDC2, D14_cDC2, D17_cDC2, D21_cDC2, D7_pDC, D10_pDC, D14_pDC, D17_pDC, D21_pDC, D7_Mye, D10_Mye, D14_Mye, D17_Mye, D21_Mye, D7_Mast, D10_Mast, D14_Mast, D17_Mast, D21_Mast, D7_Lymph, D10_Lymph, D14_Lymph, D17_Lymph, D21_Lymph, D7_Ery, D10_Ery, D14_Ery, D17_Ery, D21_Ery,umap1d, cluster_30, patient)
