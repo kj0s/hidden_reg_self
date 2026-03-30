@@ -1,3 +1,6 @@
+head(rownames(cpm))
+table(grepl("PA", rownames(cpm)))
+table(grepl("PB", rownames(cpm)))
 
 # pkgs
 
