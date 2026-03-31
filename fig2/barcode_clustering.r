@@ -1,3 +1,4 @@
+# TESTED, PRODUCED CLUSTERING MAP W BOTH 8 AND 10, ISSUE W THE COSINE SIMILARITY 8/10, GOT SLIGHTLY DIFF OUTPUTS. 
 library(RColorBrewer)
 #Set colour palettes and plot themes
 brewer.pal(8, "Set1")
