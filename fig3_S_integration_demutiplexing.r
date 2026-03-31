@@ -17,29 +17,28 @@ library(spgs)
 library(dplyr)
 library(tidyr)
 
-#RNA alanysis only
-#Load dataset from mgi
-ST223.mgi <- Read10X(data.dir = "/wehisan/general/user_managed/grpu_naik.s_2/2023_Sequencing_Runs/ST223/Analsyis/ST223_GEX/outs/filtered_feature_bc_matrix/")
+ST223.mgi <- Read10X(data.dir = "/wehisan/.../filtered_feature_bc_matrix/")
 ST223.rna <- CreateSeuratObject(counts = ST223.mgi, project = "ST223")
 
-#Add SPLINTR to RNA dataset
-SPLINTR.1 <-read.table("/stornext/General/data/academic/lab_naik/Sara_Tomei/R_analysis/10X_Analysis/ST223/V350096710_S1_L001_splintr_counts.csv", header = FALSE, sep = ",")
-SPLINTR.2 <-read.table("/stornext/General/data/academic/lab_naik/Sara_Tomei/R_analysis/10X_Analysis/ST223/V350096710_S1_L002_splintr_counts.csv", header = FALSE, sep = ",")
-meta.data <-read.table("/stornext/General/data/academic/lab_naik/Sara_Tomei/R_analysis/10X_Analysis/ST223/meta.data.txt", header = TRUE, sep = "\t")
-SPLINTR <- rbind(SPLINTR.1, SPLINTR.2)
-SPLINTR <- select(SPLINTR, V1, V2, V4)
-SPLINTR <- SPLINTR[!duplicated(SPLINTR), ]
-SPLINTR$V4 <- gsub("GCCCTGAT", "", SPLINTR$V4)
-SPLINTR$V4 <- gsub("TATGCAAG", "", SPLINTR$V4)
-SPLINTR=data.frame(SPLINTR, barcode=substr(SPLINTR$V4,1,15))
-barcodes <- SPLINTR(select, V1, barcode)
-barcodes <- barcodes[!duplicated(barcodes$V1), ]
-barcodes$cell <- paste(barcodes$V1, "-1", sep="")
+# Load barcode-to-cell mapping
+common_cells <- read.table("ST223_common.barcodes.cell.txt", 
+                           header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 
-meta.data <- select(meta.data, cell, donor_id, cons_bc)
+# Load barcode CPM counts (if you want to use them)
+common_cpm <- read.table("ST223_common.barcodes.cpm.txt", 
+                         header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 
-ST223.rna@meta.data$cell=rownames(ST223.rna@meta.data)
-ST223.rna@meta.data <- left_join(ST223.rna@meta.data, meta.data, by="cell")
+ST223.rna@meta.data$cell <- rownames(ST223.rna@meta.data)
+
+# Merge metadata with common cells
+ST223.rna@meta.data <- left_join(ST223.rna@meta.data, common_cells, by = "cell")
+
+# Optional: check how many barcodes matched
+sum(!is.na(ST223.rna@meta.data$barcode))
+
+# Example: create ADT assay
+adt_assay <- CreateAssayObject(counts = common_cpm)
+ST223.rna[["ADT"]] <- adt_assay
 
 #Add demultiplex with SNP 
 donors <- read.table("/wehisan/general/user_managed/grpu_naik.s_2/2023_Sequencing_Runs/ST223/Analsyis/GEX_demux/donor_ids.tsv", header = TRUE, sep ="\t")
