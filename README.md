@@ -1,21 +1,45 @@
-What determines whether an individual HSC chooses to self-renew or differentiate? And is this decision HERITABLE - does one HSC's choice influence what its daughter cells do? -> clonal fate bias or lineage commitment.
+## Inputs
+We combine three independent layers: 
+1. RNA, in a seurat object, which tells us the cell state.
+2. HTO/ SNP donor IDs that tell you the sample identity
+3. SPLINTR/lineage barcodes that tell you h=the lineage identity.
 
-method: 
-1. Add unique DNA barcode to EACH HSC
-2. Let them grow in vivo (natural conditions)
-3. Sample blood over time
-4. Sequence barcode → count which cell types
-   came from which HSC
+## Methodology
 
-## fig2_plotting_barcodes.r 
-  characterise what each barcode does: Over 21 days, which cell types does this HSC generate, and how does output change over time?
-  creates a 1D umap, pseudo temporal developmental trajectory for each HSC. it also arranges barcodes from fate pattern A to Bp; do HSCs fall into a distinct fate category or is there a spectrum?
+the data follows the pipeline:
+NormalizeData → FindVariableFeatures → ScaleData → RunPCA 
+FindNeighbors → FindClusters → RunUMAP
 
-## fig3_cluster_seurat_annotation.r
+this creates a feature space ( based on gene eexpression), a graph (connected by similarity), and clusters ( groups of similar cells). 
 
-understand what GENES cause these diff fate biases. If HSC A becomes erythroid-biased and HSC B becomes cDC-biased,what genes are different between them? 
+each cluster is a transcriptional state. and each state is a cell fate (proxy).
 
-barcode data tells us the outcome [ which cell types were made ] and rna sequencing tells us the mechanism aka which genes were expressed. combining them means we can link genes and fate. 
+we remove any low quality cells, ambiguous assignments, and unwanted donors.
+we then asign donor identites to the cells so each one has a biological origin. 
 
-## working with cosine similarity vs correlation distance based metrics:
-A recent comparison has suggested that correlation-based distances may outperform other distance metrics when used with k-means or as the basis for Gaussian kernels (Kim et al, 2018). changing the code for fig 2 and 3 to reflect this change. 
+the cell (RNA) and barcode (lineage tag) are then linked. after, we can link barcodes to patient identity into one table. 
+
+## Results
+one table showing:
+cell
+ ├── RNA expression (state)
+ ├── cluster (state group)
+ ├── donor (sample origin)
+ └── barcode (lineage identity)
+
+ # Cell Fate
+ we find the 'fates' of cells using clustering aka they're grouped by EXPRESSION. this is _phenotypic fate_. 
+
+ we also measure the fate from barcodes aka lineage fate; from shared barcodes across plates/patients and percentage per plate. this aims to measure:
+ 1. does a lineage persist?
+ 2. does it expand?
+ 3. where does it appear?
+this is _lineage fate_.
+
+## finding cell fates
+for each barcode, 
+find all cells with this barcode{
+→ look at their clusters
+→ look at their donor identity
+→ look at their distribution across plates
+}
