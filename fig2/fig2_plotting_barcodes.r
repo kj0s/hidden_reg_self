@@ -135,7 +135,9 @@ pheatmap(
 
 #  2D UMAP VISUALIZATION
 
-u2 <- umap(dt[,expr_cols], n_components=2)
+u2 <- umap(dt[,expr_cols],
+           metric="cosine",
+           n_components=2)
 
 dt$umap1 <- u2$layout[,1]
 dt$umap2 <- u2$layout[,2]
