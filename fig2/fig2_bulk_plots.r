@@ -24,3 +24,11 @@ df$random <- runif(nrow(df))
 ggplot(df, aes(x = fate_umap, y = random, color = as.factor(fate_cluster))) +
   geom_point(size = 0.8, alpha = 0.8) +
   theme_classic()
+
+## check if broken: 
+colnames(obj@meta.data)
+df <- obj@meta.data %>%
+  rename(
+    fate_umap = YOUR_COLUMN,
+    rna_umap = YOUR_OTHER_COLUMN
+  )
