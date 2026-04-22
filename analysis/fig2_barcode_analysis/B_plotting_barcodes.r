@@ -1,3 +1,9 @@
+# Final Run Check
+# Wed Apr 22 2026
+# KJ 
+# needed files: ST223_common.barcodes.cell.rds, all_time_cell.common.txt [!], tot.common.rds [!], all_barcodes [!], 
+# todo: biomass (made from tot_common) [!]
+
 ## ----setup, include=FALSE---------------------------------------------------------------------------------------------------
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -60,7 +66,7 @@ bias_col = c("1"="#2D004B", "2"="#8073AC", "3"="#D8DAEB", "4"="#FFFFBF", "5"="#F
 Group_col = c("2"="#A6CEE3","V"="#1F78B4",
               "P"="#B2DF8A", "1"="#33A02C",
               "U"="#FB9A99", "T"="#E31A1C")
-              
+
 Week_col = c(D7="#C2BC80", D10="#9B8357", D14="#865640", D17="#BD582C", D21="#E48312")
 plate_col= c(PA= "red", PB= "blue")
 cluster_colour <- c("1"= "#1F77B4FF", "2"= '#AEC7E8FF', "3"= '#FF7F0EFF', "4"= '#FFBB78FF', "5"= '#2CA02CFF', "6"= '#98DF8AFF', "7"= '#D62728FF', "8"= '#FF9896FF', "9"= '#9467BDFF', "10"= '#C5B0D5FF', "11"= '#8C564BFF', "12"= '#C49C94FF', "13"= '#E377C2FF', "14"= '#F7B6D2FF', "15"= '#7F7F7FFF', "16"= '#C7C7C7FF', "17"= '#BCBD22FF', "18"= '#DBDB8DFF', "19"= '#17BECFFF' )
@@ -68,7 +74,7 @@ cluster_colour <- c("1"= "#1F77B4FF", "2"= '#AEC7E8FF', "3"= '#FF7F0EFF', "4"= '
 cluster_colour_seurat <- c("primitive-RBC"= "#1F77B4FF", "Ery"= '#AEC7E8FF', "Mk"= '#FF7F0EFF', "HSC"= '#FFBB78FF', "basophil-mast_progenitor"= '#2CA02CFF', "early_lymphoid_progenitor"= '#BCBD22FF', "pre-cDC"= '#D62728FF', "CDP"= '#FF9896FF', "CMP-GMP"= '#9467BDFF', "Mk-ery_prog"= '#8C564BFF', "CD14+Monocyte"= '#E377C2FF')
 
 pop_col <- c(cDC1= "#1B9E77", cDC2=  "#D95F02", pDC= "#7570B3", Mye= "#E7298A", Mast= "#66A61E", Ery= "#E6AB02", Lymph=  "#A6761D", Rest= "#666666")
-  
+
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------
@@ -80,7 +86,7 @@ THEME1=theme(text = element_text(size = 20, colour = "black"),
              panel.background = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
              strip.background = element_blank(),
              legend.position = "none"
-            )
+)
 
 THEME2=theme(text = element_text(size = 20, colour = "black"), 
              plot.title = element_text(size = 11, face = "bold"),
@@ -90,17 +96,17 @@ THEME2=theme(text = element_text(size = 20, colour = "black"),
              panel.background = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
              strip.background = element_blank(),
              legend.position = "right",
-            )
+)
 
 THEME3= theme(text = element_text(size = 20, colour = "black"), 
-             plot.title = element_text(size = 11, face = "bold"),
-             axis.text.x = element_text(angle = 45, hjust = 1, colour = "black"), 
-             axis.text.y = element_blank(), 
-             axis.line = element_line(colour = "black"),
-             panel.background = element_rect(fill= "darkgrey"), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-             strip.background = element_blank(),
-             legend.position = "right"
-            )
+              plot.title = element_text(size = 11, face = "bold"),
+              axis.text.x = element_text(angle = 45, hjust = 1, colour = "black"), 
+              axis.text.y = element_blank(), 
+              axis.line = element_line(colour = "black"),
+              panel.background = element_rect(fill= "darkgrey"), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+              strip.background = element_blank(),
+              legend.position = "right"
+)
 
 THEME5=theme(text = element_text(size = 7, colour = "black"), 
              plot.title = element_text(size = 8, face = "bold"),
@@ -111,7 +117,7 @@ THEME5=theme(text = element_text(size = 7, colour = "black"),
              strip.background = element_blank(),
              legend.background = element_blank(),legend.key = element_blank(),
              legend.position = "none"
-            )
+)
 THEME4=theme(text = element_text(size = 14, colour = "black"), 
              plot.title = element_text(size = 16, face = "bold"),
              axis.text= element_blank(), axis.title = element_blank(), axis.ticks = element_blank(),
@@ -120,9 +126,9 @@ THEME4=theme(text = element_text(size = 14, colour = "black"),
              panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
              strip.background = element_blank(),
              legend.position = "none"
-            )
+)
 
-THEME5=theme(text = element_text(size = 50, colour = "black"), 
+THEME6=theme(text = element_text(size = 50, colour = "black"), 
              plot.title = element_text(size = 40, face = "bold"),
              axis.text.x = element_text(angle = 45, hjust = 1, colour = "black"), 
              axis.text.y = element_text(colour = "black"), 
@@ -130,7 +136,7 @@ THEME5=theme(text = element_text(size = 50, colour = "black"),
              panel.background = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
              strip.background = element_blank(),
              legend.position = "right"
-            )
+)
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------
@@ -148,6 +154,8 @@ all_timepoints <- function(D) {
 }
 
 #For Sis-seq
+common.barcodes.cell.plate <- read.table("ST223_common.barcodes.cell.txt", header=TRUE)
+common.barcodes.cpm.plate <- read.table("ST223_common.barcodes.cpm.txt", header=TRUE)
 common.barcodes.cell.1= all_timepoints(common.barcodes.cell.plate)
 common.barcodes.cpm.1= all_timepoints(common.barcodes.cpm.plate)
 
@@ -156,7 +164,8 @@ write.table(common.barcodes.cell.1, file="ST223_common.barcodes.cell.txt", sep="
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------
-cell_number <- common.barcodes.cpm.plate
+# changing from cpm.plate to cpm
+cell_number <- common.barcodes.cpm
 cell_number <- melt(cell_number, id.vars = c("plate", "day", "patient"))
 cell_number <- subset(cell_number, value>0)
 cell_number <- cell_number %>% group_by(plate, day, variable) %>% summarise(tot_numbers = sum(value))
@@ -167,7 +176,7 @@ ggplot(cell_number, aes(x=day, y=tot_numbers, group= variable, colour= variable)
   geom_line(linewidth = 1) + 
   #scale_color_manual(values = Group_col)+
   facet_wrap(~plate , scales = "free")+
-THEME2
+  THEME2
 
 
 
@@ -272,9 +281,9 @@ ggplot(results, aes(x = n_neighbors, y = silhouette, color = factor(min_dist))) 
   geom_line() + geom_point(size = 2) +
   theme_minimal()
 results$score <- with(results,
-  scale(trustworthiness) +
-  scale(bio_correlation) +
-  scale(silhouette)
+                      scale(trustworthiness) +
+                        scale(bio_correlation) +
+                        scale(silhouette)
 )
 
 results[order(-results$score), ]
@@ -317,16 +326,16 @@ dt_A=dt_A[order(dt_A$cluster_30),]
 anno_row = select(dt_A, patient, cluster_30,)
 anno_row$cluster_30 <- as.factor(anno_row$cluster_30)
 mat_breaks <- seq(min(dt_A[,1:35]), max(dt_A[,1:35]), length.out = 5)
- pheatmap(data.matrix(dt_A[,1:35]),
-          cluster_rows = F, cluster_cols = F, #cutree_rows = 19,
-          annotation_row = anno_row,
-          #scale = "row", clustering_distance_rows = "maximum",
-          color=barcode_col,
-          annotation_colors = list(patient = Group_col,
-                                   cluster_30= cluster_col),
-          border_color = NA,
-          legend = T, annotation_legend = T, show_rownames = F, fontsize = 20,
-          filename = "heatmap_leiden_cluster_PA.pdf", width = 15 , height = 12)
+pheatmap(data.matrix(dt_A[,1:35]),
+         cluster_rows = F, cluster_cols = F, #cutree_rows = 19,
+         annotation_row = anno_row,
+         #scale = "row", clustering_distance_rows = "maximum",
+         color=barcode_col,
+         annotation_colors = list(patient = Group_col,
+                                  cluster_30= cluster_col),
+         border_color = NA,
+         legend = T, annotation_legend = T, show_rownames = F, fontsize = 20,
+         filename = "heatmap_leiden_cluster_PA.pdf", width = 15 , height = 12)
 
 
 dt_B <- dt[,grepl("_PB", names(dt))]
@@ -341,16 +350,16 @@ dt_B=dt_B[order(dt_B$cluster_30),]
 anno_row = select(dt_B, patient, cluster_30,)
 anno_row$cluster_30 <- as.factor(anno_row$cluster_30)
 mat_breaks <- seq(min(dt_B[,1:35]+1), max(dt_B[,1:35]), length.out = 5)
- pheatmap(data.matrix(dt_B[,1:35]),
-          cluster_rows = F, cluster_cols = F, #cutree_rows = 19,
-          annotation_row = anno_row,
-          #scale = "row", clustering_distance_rows = "maximum",
-          color=barcode_col,
-          annotation_colors = list(patient = Group_col,
-                                   cluster_30= cluster_col),
-          border_color = NA,
-          legend = T, annotation_legend = T, show_rownames = F, fontsize = 20,
-          filename = "heatmap_leiden_cluster_PB.pdf", width = 15 , height = 12)
+pheatmap(data.matrix(dt_B[,1:35]),
+         cluster_rows = F, cluster_cols = F, #cutree_rows = 19,
+         annotation_row = anno_row,
+         #scale = "row", clustering_distance_rows = "maximum",
+         color=barcode_col,
+         annotation_colors = list(patient = Group_col,
+                                  cluster_30= cluster_col),
+         border_color = NA,
+         legend = T, annotation_legend = T, show_rownames = F, fontsize = 20,
+         filename = "heatmap_leiden_cluster_PB.pdf", width = 15 , height = 12)
 brewer.pal(8, "Dark2")
 
 cluster_col <- c("1"= "#1B9E77", "2"= "#D95F02", "3"= "#7570B3", "4"= "#E7298A", "5"= "#66A61E", "6"= "#E6AB02", "7"= "#A6761D", "8"= "#666666")
@@ -369,16 +378,16 @@ dt <- dt[rowSums(dt[,1:40])>0,]
 dt=dt[order(dt$cluster),]
 anno_row = select(dt, patient, cluster)
 mat_breaks <- seq(min(dt[,1:40]), max(dt[,1:40]), length.out = 5)
-  dendro <- pheatmap(data.matrix(dt[,1:40]),
-          cluster_rows = T, cluster_cols = F, cutree_rows = 19,
-          annotation_row = anno_row,
-          scale = "row", clustering_distance_rows = "maximum",
-          color=inferno(length(mat_breaks) - 1),
-          #annotation_colors = list(patient = Group_col,
-                                   #cluster= cluster_colour),
-          border_color = NA,
-          legend = T, annotation_legend = T, show_rownames = F, fontsize = 20)
-          filename = "heatmap_hierarchical_cluster.pdf", width = 15 , height = 12)
+dendro <- pheatmap(data.matrix(dt[,1:40]),
+                   cluster_rows = T, cluster_cols = F, cutree_rows = 19,
+                   annotation_row = anno_row,
+                   scale = "row", clustering_distance_rows = "maximum",
+                   color=inferno(length(mat_breaks) - 1),
+                   #annotation_colors = list(patient = Group_col,
+                   #cluster= cluster_colour),
+                   border_color = NA,
+                   legend = T, annotation_legend = T, show_rownames = F, fontsize = 20)
+filename = "heatmap_hierarchical_cluster.pdf", width = 15 , height = 12)
 
 cut_avg <- cutree(dendro$tree_row, k = 19)
 dt$cluster <- cut_avg
@@ -408,15 +417,15 @@ all_time_cell.common$umap2= u$layout[,2]
 dt$day = factor(dt$day, levels = c("D7","D10","D14", "D17", "D21"))
 ggplot(dt, aes(x= umap1, y=umap2, colour= as.factor(fate_bias))) + 
   scale_colour_manual(values = bias_col)+
-    geom_point(size=0.5)+
-   facet_wrap(~day)+
-   THEME2
+  geom_point(size=0.5)+
+  facet_wrap(~day)+
+  THEME2
 
 ggplot(dt, aes(x= umap1, y=umap2, colour= as.factor(cluster))) + 
-    geom_point(size=0.5)+
+  geom_point(size=0.5)+
   #xlim (-30, 30)+
   #ylim (-30, 30)+
-   THEME2
+  THEME2
 
 #u <- umap(dt[,1:8],metric="cosine", min_dist=4, n_neighbors=80, spread=10) not bad
 #u <- umap(dt[,1:8],metric="cosine", min_dist=1, spread=2)
@@ -456,14 +465,14 @@ ggplot(cDC1, aes(x=day, y=value, group= barcode, colour= barcode))+
   geom_area()+
   scale_color_manual(values = generate.random.colors(unique(cDC1$barcode)))+
   facet_wrap(~plate, scales = "free")+
-THEME1
+  THEME1
 dev.off()
 
 jpeg(filename = "cDC1_line.jpeg", width = 4000, height = 2000, res= 300) 
 ggplot(cDC2, aes(x=day, y=value, group= barcode, fill= barcode)) + 
-    geom_area(alpha=0.8 , linewidth=0.1, colour="black")+
-    scale_fill_manual(values = generate.random.colors(unique(cDC2$barcode)))+
-    facet_wrap(~plate)+
+  geom_area(alpha=0.8 , linewidth=0.1, colour="black")+
+  scale_fill_manual(values = generate.random.colors(unique(cDC2$barcode)))+
+  facet_wrap(~plate)+
   THEME1
 dev.off()
 
@@ -528,8 +537,8 @@ a <- rbind(a, null)
 a.1 <- filter(a, cosine>0)
 
 ggplot(a.1, aes(x= well, y=cosine)) +
-    geom_boxplot() +
-    geom_jitter(color="black", size=0.6, alpha=0.9)+
+  geom_boxplot() +
+  geom_jitter(color="black", size=0.6, alpha=0.9)+
   THEME2
 
 
@@ -565,13 +574,13 @@ for (b in barcode)
   dtm$day = factor(dtm$day, levels = c("D7","D10","D14", "D17", "D21"))
   dtm$variable = factor(dtm$variable, levels = c("cDC1","cDC2","pDC", "Mye", "Mast", "Ery", "Lymph", "Rest"))
   print(
-     ggplot(dtm, aes(x=day, y=value, group= variable, fill= variable)) + 
-    geom_ribbon(aes(ymin=0, ymax=value),alpha=0.6 , linewidth=0.1, colour="black")+
+    ggplot(dtm, aes(x=day, y=value, group= variable, fill= variable)) + 
+      geom_ribbon(aes(ymin=0, ymax=value),alpha=0.6 , linewidth=0.1, colour="black")+
       scale_fill_manual(values = pop_col)+
       facet_wrap(~plate)+
-  THEME2 +
-    ggtitle(b)
-    )
+      THEME2 +
+      ggtitle(b)
+  )
 }
 dev.off()
 
@@ -581,24 +590,24 @@ ggplot(cDC1, aes(x=day, y=value, group= barcode, colour= barcode))+
   geom_area()+
   scale_color_manual(values = generate.random.colors(unique(cDC1$barcode)))+
   facet_wrap(~plate, scales = "free")+
-THEME1
+  THEME1
 dev.off()
 
 jpeg(filename = "cDC1_line.jpeg", width = 4000, height = 2000, res= 300) 
 ggplot(cDC2, aes(x=day, y=value, group= barcode, fill= barcode)) + 
-    geom_area(alpha=0.8 , linewidth=0.1, colour="black")+
-    scale_fill_manual(values = generate.random.colors(unique(cDC2$barcode)))+
-    facet_wrap(~plate)+
+  geom_area(alpha=0.8 , linewidth=0.1, colour="black")+
+  scale_fill_manual(values = generate.random.colors(unique(cDC2$barcode)))+
+  facet_wrap(~plate)+
   THEME1
 dev.off()
 
 
- ggplot(dtm, aes(x=day, y=value, group= variable, fill= variable)) + 
-    geom_ribbon(aes(ymin=0, ymax=value),alpha=0.6 , linewidth=0.1, colour="black")+
-      scale_fill_manual(values = pop_col)+
-      facet_wrap(~plate)+
+ggplot(dtm, aes(x=day, y=value, group= variable, fill= variable)) + 
+  geom_ribbon(aes(ymin=0, ymax=value),alpha=0.6 , linewidth=0.1, colour="black")+
+  scale_fill_manual(values = pop_col)+
+  facet_wrap(~plate)+
   THEME2 +
-    ggtitle(b)
+  ggtitle(b)
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------
@@ -606,7 +615,7 @@ dev.off()
 cpm.b.common$barcode <- rownames(cpm.b.common)
 patient <-  melt(cpm.b.common,id.vars=c("fate","plate", "day", "sample", "protein", "bin", "fate_bias", "patient", "barcode", "umap1", "umap2"))
 patient <- dcast(patient, barcode~patient, value.var = "value", fill = 0, fun.aggregate=sum)
- 
+
 
 patient=data.frame(patient, plate=substr(patient$barcode,1,2), day=substr(patient$barcode,4,6), stringsAsFactors = FALSE)
 patient$day=gsub("_","",patient$day)
@@ -651,29 +660,29 @@ dt.2=select(dt.2, D7, D10, D14, D17, D21)
 
 m <- dt.2
 binary=array()
-    for(i in 1:nrow(m)) binary[i]=paste0(as.numeric((m>0)[i,]),collapse = "")
-    m=m[order(binary,rowSums(m)),]
-  
-    m$index=1:nrow(m)
-  m$code=row.names(m)
-  m=data.frame(m, plate=substr(m$code,1,2))
-  m$code=gsub("PA", "", m$code)
-  m$code=gsub("PB", "", m$code)
-  m$code=gsub("PC", "", m$code)
-  mm=reshape::melt(m,id.var=c("index","code", "plate"))
- 
+for(i in 1:nrow(m)) binary[i]=paste0(as.numeric((m>0)[i,]),collapse = "")
+m=m[order(binary,rowSums(m)),]
+
+m$index=1:nrow(m)
+m$code=row.names(m)
+m=data.frame(m, plate=substr(m$code,1,2))
+m$code=gsub("PA", "", m$code)
+m$code=gsub("PB", "", m$code)
+m$code=gsub("PC", "", m$code)
+mm=reshape::melt(m,id.var=c("index","code", "plate"))
+
 jpeg(filename = "P1_his.jpeg", width = 250, height = 200, res= 300) 
-  ggplot(mm, aes(x=variable, y=value))+
+ggplot(mm, aes(x=variable, y=value))+
   geom_col(aes(fill = code), width = 0.7, alpha = 1)+
   scale_fill_manual(values = generate.random.colors(unique(mm$code)))+
   facet_wrap(~plate)+
   THEME1
 dev.off()
- 
+
 ggplot(mm, aes(x=variable, y=value, group= code, fill= code)) + 
-    geom_area(alpha=0.8 , linewidth=0.1, colour="black")+
-    scale_fill_manual(values = generate.random.colors(unique(mm$code)))+
-    facet_wrap(~plate)+
+  geom_area(alpha=0.8 , linewidth=0.1, colour="black")+
+  scale_fill_manual(values = generate.random.colors(unique(mm$code)))+
+  facet_wrap(~plate)+
   THEME1
 
 
@@ -707,7 +716,7 @@ ggplot(bc.count, aes(x=day, y=count, group= variable, colour= variable))+
   geom_line(linewidth = 1) + 
   scale_color_manual(values = Group_col)+
   facet_wrap(~plate)+
-THEME2
+  THEME2
 
 
 
@@ -729,7 +738,7 @@ cosine <- tot_populations.common_A %>%
 venn <- all_barcodes
 venn <- transmute(venn, PA= rowSums(select(venn, ends_with("PA"))), PB= rowSums(select(venn, ends_with("PB"))), PC= rowSums(select(venn, ends_with("PC"))))
 venn.2 <- transmute(venn, Exp1= rowSums(select(venn, ends_with("PA") | ends_with("PB"))),                       
-                           Exp2=rowSums(select(venn, ends_with("PC"))))
+                    Exp2=rowSums(select(venn, ends_with("PC"))))
 #No PCR replicates filtering
 names(ST208.1) <- paste(names(ST208.1), "PC", sep = "_")
 names(ST208.1)[1] <- "barcode"
@@ -744,21 +753,21 @@ venn.PCR <- transmute(venn.PCR, PA= rowSums(select(venn.PCR, contains("PA"))), P
 
 #Binarise data set
 binarise_data_set <- function(b){
- row.names(b) <- NULL #give a number to each barcode
- b <- apply(ifelse(b>1,rownames(b),0),2,paste) #put the barcode number in each sample if present
- b <- as.data.frame(b)
- b <- list('PA'= b$PA,'PB'= b$PB, 'PC'= b$PC)
- b <- lapply(b,function(x) x[x!=0])
- return(b)
+  row.names(b) <- NULL #give a number to each barcode
+  b <- apply(ifelse(b>1,rownames(b),0),2,paste) #put the barcode number in each sample if present
+  b <- as.data.frame(b)
+  b <- list('PA'= b$PA,'PB'= b$PB, 'PC'= b$PC)
+  b <- lapply(b,function(x) x[x!=0])
+  return(b)
 }
 
 binarise_data_set <- function(b){
- row.names(b) <- NULL #give a number to each barcode
- b <- apply(ifelse(b>1,rownames(b),0),2,paste) #put the barcode number in each sample if present
- b <- as.data.frame(b)
- b <- list('Exp1'= b$Exp1,'Exp2'= b$Exp2)
- b <- lapply(b,function(x) x[x!=0])
- return(b)
+  row.names(b) <- NULL #give a number to each barcode
+  b <- apply(ifelse(b>1,rownames(b),0),2,paste) #put the barcode number in each sample if present
+  b <- as.data.frame(b)
+  b <- list('Exp1'= b$Exp1,'Exp2'= b$Exp2)
+  b <- lapply(b,function(x) x[x!=0])
+  return(b)
 }
 
 venn.bin <- binarise_data_set(venn)
@@ -828,10 +837,10 @@ transcriptome_vs_fate <- filter(transcriptome_vs_fate, !seurat_clusters=="15")
 
 ggplot(transcriptome_vs_fate, aes(x= fate_umap, y=rna_umap, colour= as.factor(fate_cluster))) + 
   scale_colour_manual(values = cluster_colour)+
-    geom_point(size=1)+
-   scale_fill_manual(name="fate cluster")+
+  geom_point(size=1)+
+  scale_fill_manual(name="fate cluster")+
   THEME2
-  
+
 set.seed(12345)
 transcriptome_vs_fate$random = sample(1:100, replace=TRUE, nrow(transcriptome_vs_fate))
 dt = transcriptome_vs_fate
@@ -909,12 +918,12 @@ counts.HSC <- left_join(counts.HSC, metadata.HSC, by = "cell")
 counts.HSC <- counts.HSC[order(counts.HSC$umap1dHSC),]
 counts.HSC <- counts.HSC[order(counts.HSC$fate_cluster),]
 colAnn = HeatmapAnnotation(
-    score = counts.HSC$predicted.celltype.score, 
-    cluster = as.factor(counts.HSC$fate_cluster),
-    col = list(score = colorRamp2(c(0, 1), c("white", "red")),
-               cluster = c("3" = "#1B9E77",  "5"= "#D95F02", "6"= "#7570B3"),
-    which = 'col'
-    )
+  score = counts.HSC$predicted.celltype.score, 
+  cluster = as.factor(counts.HSC$fate_cluster),
+  col = list(score = colorRamp2(c(0, 1), c("white", "red")),
+             cluster = c("3" = "#1B9E77",  "5"= "#D95F02", "6"= "#7570B3"),
+             which = 'col'
+  )
 )
 barcode=colorRamp2(c(-2, 0, 2), c("purple", "black", "yellow"))
 scaled_mat = scale(counts.HSC[,1:45])
@@ -941,18 +950,18 @@ anno_row$fate_cluster <- as.factor(anno_row$fate_cluster)
 mat_breaks <- seq(min(fate_selection[,1:35]), max(fate_selection[,1:35]), length.out = 5)
 fate_cluster_col <- c("3"= "#1B9E77",  "5"= "#D95F02", "6"= "#7570B3")
 #Group_col = c("V"="#C2BC80",
-              "P"="#865640", "1"="#BD582C",
-              "U"="#E48312")
-  pheatmap(data.matrix(fate_selection[,1:35]),
-          cluster_rows = F, cluster_cols = F, #cutree_rows = 19,
-          annotation_row = anno_row,
-          #scale = "row", clustering_distance_rows = "maximum",
-          color=barcode_col,
-          annotation_colors = list(patient = Group_col,
-                                   fate_cluster= fate_cluster_col),
-          border_color = NA,
-          legend = T, annotation_legend = T, show_rownames = F, fontsize = 20)
-          filename = "heatmap_HSC_fate_cluster.pdf", width = 15 , height = 12)
+"P"="#865640", "1"="#BD582C",
+"U"="#E48312")
+pheatmap(data.matrix(fate_selection[,1:35]),
+         cluster_rows = F, cluster_cols = F, #cutree_rows = 19,
+         annotation_row = anno_row,
+         #scale = "row", clustering_distance_rows = "maximum",
+         color=barcode_col,
+         annotation_colors = list(patient = Group_col,
+                                  fate_cluster= fate_cluster_col),
+         border_color = NA,
+         legend = T, annotation_legend = T, show_rownames = F, fontsize = 20)
+filename = "heatmap_HSC_fate_cluster.pdf", width = 15 , height = 12)
 
 ST223.annotated_fate_CMP <- subset(ST223.annotated_fate, idents = "basophil-mast_progenitor")
 DefaultAssay(ST223.annotated_fate_CMP) <- 'RNA'
@@ -983,18 +992,18 @@ anno_row$fate_cluster <- as.factor(anno_row$fate_cluster)
 mat_breaks <- seq(min(fate_selection[,1:35]), max(fate_selection[,1:35]), length.out = 5)
 fate_cluster_col <- c("2"= "#1B9E77",  "8"= "#D95F02", "14"= "#7570B3")
 #Group_col = c("V"="#C2BC80",
-              "P"="#865640", "1"="#BD582C",
-              "U"="#E48312")
-  pheatmap(data.matrix(fate_selection[,1:35]),
-          cluster_rows = F, cluster_cols = F, #cutree_rows = 19,
-          annotation_row = anno_row,
-          #scale = "row", clustering_distance_rows = "maximum",
-          color=barcode_col,
-          annotation_colors = list(patient = Group_col,
-                                   fate_cluster= fate_cluster_col),
-          border_color = NA,
-          legend = T, annotation_legend = T, show_rownames = F, fontsize = 20)
-          filename = "heatmap_CMP_fate_cluster.pdf", width = 15 , height = 12)
+"P"="#865640", "1"="#BD582C",
+"U"="#E48312")
+pheatmap(data.matrix(fate_selection[,1:35]),
+         cluster_rows = F, cluster_cols = F, #cutree_rows = 19,
+         annotation_row = anno_row,
+         #scale = "row", clustering_distance_rows = "maximum",
+         color=barcode_col,
+         annotation_colors = list(patient = Group_col,
+                                  fate_cluster= fate_cluster_col),
+         border_color = NA,
+         legend = T, annotation_legend = T, show_rownames = F, fontsize = 20)
+filename = "heatmap_CMP_fate_cluster.pdf", width = 15 , height = 12)
 
 DefaultAssay(ST223.annotated_fate) <- 'RNA'
 ST223.annotated_fate <- ScaleData(ST223.annotated_fate)
@@ -1028,15 +1037,15 @@ Group_col = c("V"="#C2BC80",
               "U"="#E48312")
 
 pheatmap(data.matrix(fate_selection[,1:35]),
-          cluster_rows = F, cluster_cols = F, #cutree_rows = 19,
-          annotation_row = anno_row,
-          #scale = "row", clustering_distance_rows = "maximum",
-          color=inferno(length(mat_breaks) - 1),
-          annotation_colors = list(patient = Group_col,
-                                   fate_cluster= fate_cluster_col),
-          border_color = NA,
-          legend = T, annotation_legend = T, show_rownames = F, fontsize = 20)
-          filename = "heatmap_CMP_fate_cluster.pdf", width = 15 , height = 12)
+         cluster_rows = F, cluster_cols = F, #cutree_rows = 19,
+         annotation_row = anno_row,
+         #scale = "row", clustering_distance_rows = "maximum",
+         color=inferno(length(mat_breaks) - 1),
+         annotation_colors = list(patient = Group_col,
+                                  fate_cluster= fate_cluster_col),
+         border_color = NA,
+         legend = T, annotation_legend = T, show_rownames = F, fontsize = 20)
+filename = "heatmap_CMP_fate_cluster.pdf", width = 15 , height = 12)
 
 Idents(ST223.annotated_fate) <- 'fate_cluster'
 ST223.annotated_fate_Ery <- subset(ST223.annotated_fate, idents = c("9", "10", "11"))
@@ -1065,7 +1074,7 @@ for (p in plate)
 {
   #g="ProDC_Day9"
   dtm = subset(dt, dt$plate==p)
-
+  
   cell.type.bias = unique(dt$barcodes)
   b = data.frame()
   for (c in cell.type.bias)
