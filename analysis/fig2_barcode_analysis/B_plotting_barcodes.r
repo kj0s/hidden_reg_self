@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------
-# install.packages("devtools")
+install.packages("devtools")
 devtools::install_github("vqf/nVennR")
 install.packages("ggimage")
 install.packages("fuzzyjoin")
@@ -36,7 +36,6 @@ library(gplots)
 library(tidyverse)
 library(viridis)
 library(scater)
-library()
 library(RColorBrewer)
 library(viridis) 
 library(VennDiagram)
@@ -140,7 +139,7 @@ THEME6=theme(text = element_text(size = 50, colour = "black"),
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------
-x <- read.table("ST223_common.barcodes.cpm.txt", header=TRUE)
+x <- read.table("/vast/projects/Sisseq/ST223/ST223_common.barcodes.cpm.txt", header=TRUE)
 all_timepoints <- function(D) {
   dt=data.frame(D, plate=substr(row.names(D),2,3), sample=substr(row.names(D),6,6), protein=substr(row.names(D),49,51), stringsAsFactors = FALSE)
   dt= dt %>% dplyr::mutate (patient = case_when(protein=="GFP" & sample =="1"  ~ "P",
@@ -154,17 +153,18 @@ all_timepoints <- function(D) {
 }
 
 #For Sis-seq
-common.barcodes.cell.plate <- read.table("ST223_common.barcodes.cell.txt", header=TRUE)
-common.barcodes.cpm.plate <- read.table("ST223_common.barcodes.cpm.txt", header=TRUE)
+common.barcodes.cell.plate <- read.table("/vast/projects/Sisseq/ST223/ST223_common.barcodes.cell.txt", header=TRUE)
+common.barcodes.cpm.plate <- read.table("/vast/projects/Sisseq/ST223/ST223_common.barcodes.cpm.txt", header=TRUE)
 common.barcodes.cell.1= all_timepoints(common.barcodes.cell.plate)
 common.barcodes.cpm.1= all_timepoints(common.barcodes.cpm.plate)
 
-write.table(common.barcodes.cpm.1, file="ST223_common.barcodes.cpm.txt", sep="\t", row.names=TRUE, col.names=TRUE)
-write.table(common.barcodes.cell.1, file="ST223_common.barcodes.cell.txt", sep="\t", row.names=TRUE, col.names=TRUE)
+write.table(common.barcodes.cpm.1, file="/vast/projects/Sisseq/previous_code_test_KJ/intermediates/ST223_common.barcodes.cpm.txt", sep="\t", row.names=TRUE, col.names=TRUE)
+write.table(common.barcodes.cell.1, file="/vast/projects/Sisseq/previous_code_test_KJ/intermediates/ST223_common.barcodes.cell.txt", sep="\t", row.names=TRUE, col.names=TRUE)
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------
-# changing from cpm.plate to cpm
+# changing from cpm.plate to cpm. does not work, need .plate
+common.barcodes.cpm <- read.table("/vast/projects/Sisseq/ST223/ST223_common.barcodes.cpm.txt")
 cell_number <- common.barcodes.cpm
 cell_number <- melt(cell_number, id.vars = c("plate", "day", "patient"))
 cell_number <- subset(cell_number, value>0)
@@ -183,6 +183,9 @@ ggplot(cell_number, aes(x=day, y=tot_numbers, group= variable, colour= variable)
 ## ---------------------------------------------------------------------------------------------------------------------------
 library(Matrix)
 library(leiden)
+# seems to be diff file, Error in `$<-.data.frame`(`*tmp*`, cons_bc, value = "_") : replacement has 1 row, data has 0
+# maybe new file has added columns ?
+
 dt <- common.barcodes.cpm.1
 dt[,1:40] <- log2(dt[,1:40]+1)
 dt_B <- dt[grepl("PB", rownames(dt)),]
@@ -205,90 +208,84 @@ dt <- dt[,c(1:40,56:95)]
 dt <- dt[,!grepl("Rest", names(dt))]
 dt <- dt[rowSums(dt)>0,]
 
-# checking parameters for umap cos similarity, 
-n_neighbors_grid <- c(15, 30, 50, 100)
-min_dist_grid    <- c(0.1, 0.3, 0.5, 0.8)
-library(umap)
-library(RDRToolbox)
-library(cluster)
 
-run_umap_eval <- function(data, nn, md, cluster_labels = NULL, fate_bias = NULL) {
-  
-  u <- umap(data,
-            n_neighbors = nn,
-            min_dist = md,
-            metric = "cosine",
-            spread = 10)
-  
-  emb <- u$layout
-  
-  # --- Metric 1: trustworthiness ---
-  trust <- trustworthiness(data, emb, k = 10)
-  
-  # --- Metric 2: silhouette ---
-  sil <- NA
-  if (!is.null(cluster_labels)) {
-    sil_obj <- silhouette(cluster_labels, dist(emb))
-    sil <- mean(sil_obj[, 3])
-  }
-  
-  # --- Metric 3: biological correlation ---
-  bio_cor <- NA
-  if (!is.null(fate_bias)) {
-    bio_cor <- cor(emb[,1], fate_bias, method = "spearman")
-  }
-  
-  return(data.frame(
-    n_neighbors = nn,
-    min_dist = md,
-    trustworthiness = trust,
-    silhouette = sil,
-    bio_correlation = bio_cor
-  ))
-}
-results <- data.frame()
+#Run 1dumap
+u1d <- umap(dt[,1:70] ,metric="cosine", min_dist=0.8, bandwidth=50, n_neighbors=30, negative_sample_rate=20,         spread=10, n_components=1)
+dt$umap1d <- u1d$layout[,1]
 
-for (nn in n_neighbors_grid) {
-  for (md in min_dist_grid) {
-    
-    cat("Running nn =", nn, "min_dist =", md, "\n")
-    
-    res <- run_umap_eval(
-      data = dt[,1:40],               # your matrix
-      nn = nn,
-      md = md,
-      cluster_labels = dt$cluster,    # optional
-      fate_bias = dt$fate_bias        # optional
-    )
-    
-    results <- rbind(results, res)
+m1d <- Matrix(0,nrow=1534,ncol=1534,sparse=TRUE)
+rownames(m1d) <- rownames(u1d$knn$indexes)
+colnames(m1d) <- rownames(u1d$knn$indexes)
+
+#add values to matrix where there is a connection between 2 barcodes
+t <- u1d$knn$indexes
+for (i in 1:dim(t)[1]) {
+  for (j in 1:dim(t)[2]) {
+    m1d[i,t[i,j]] = 1
   }
 }
-library(ggplot2)
 
-# Trustworthiness
-ggplot(results, aes(x = n_neighbors, y = trustworthiness, color = factor(min_dist))) +
-  geom_line() + geom_point(size = 2) +
-  theme_minimal()
 
-# Biological signal
-ggplot(results, aes(x = n_neighbors, y = bio_correlation, color = factor(min_dist))) +
-  geom_line() + geom_point(size = 2) +
-  theme_minimal()
+cluster_30 <- leiden(m1d, resolution_parameter = 0.95)
 
-# Silhouette (if using clusters)
-ggplot(results, aes(x = n_neighbors, y = silhouette, color = factor(min_dist))) +
-  geom_line() + geom_point(size = 2) +
-  theme_minimal()
-results$score <- with(results,
-                      scale(trustworthiness) +
-                        scale(bio_correlation) +
-                        scale(silhouette)
-)
 
-results[order(-results$score), ]
+x <- u1d$layout
+dt <- dt[ order(match(rownames(dt), rownames(x))), ]
+dt$umap1d <- u1d$layout[,1]
+dt$cluster <- cluster_30
 
-# end my code. 
+
+dt_A <- dt[,grepl("_PA", names(dt))]
+names(dt_A) <- gsub("_PA", "", names(dt_A))
+dt_A$umap1d <- u1d30$layout[,1]
+dt_A$cluster_30 <- cluster_30
+dt_A$patient <- substr(row.names(dt_A),22,22)
+dt_A <- select(dt_A , D7_cDC1, D10_cDC1, D14_cDC1, D17_cDC1, D21_cDC1, D7_cDC2, D10_cDC2, D14_cDC2, D17_cDC2, D21_cDC2, D7_pDC, D10_pDC, D14_pDC, D17_pDC, D21_pDC, D7_Mye, D10_Mye, D14_Mye, D17_Mye, D21_Mye, D7_Mast, D10_Mast, D14_Mast, D17_Mast, D21_Mast, D7_Lymph, D10_Lymph, D14_Lymph, D17_Lymph, D21_Lymph, D7_Ery, D10_Ery, D14_Ery, D17_Ery, D21_Ery,umap1d, cluster_30, patient)
+dt_A <- dt_A[rowSums(dt_A[,1:35])>0,]
+dt_A=dt_A[order(dt_A$umap1d),]
+dt_A=dt_A[order(dt_A$cluster_30),]
+anno_row = select(dt_A, patient, cluster_30,)
+anno_row$cluster_30 <- as.factor(anno_row$cluster_30)
+mat_breaks <- seq(min(dt_A[,1:35]), max(dt_A[,1:35]), length.out = 5)
+pheatmap(data.matrix(dt_A[,1:35]),
+         cluster_rows = F, cluster_cols = F, #cutree_rows = 19,
+         annotation_row = anno_row,
+         #scale = "row", clustering_distance_rows = "maximum",
+         color=barcode_col,
+         annotation_colors = list(patient = Group_col,
+                                  cluster_30= cluster_col),
+         border_color = NA,
+         legend = T, annotation_legend = T, show_rownames = F, fontsize = 20,
+         filename = "heatmap_leiden_cluster_PA.pdf", width = 15 , height = 12)
+
+
+dt_B <- dt[,grepl("_PB", names(dt))]
+names(dt_B) <- gsub("_PB", "", names(dt_B))
+dt_B$umap1d <- u1d30$layout[,1]
+dt_B$cluster_30 <- cluster_30
+dt_B$patient <- substr(row.names(dt_B),22,22)
+dt_B <- select(dt_B , D7_cDC1, D10_cDC1, D14_cDC1, D17_cDC1, D21_cDC1, D7_cDC2, D10_cDC2, D14_cDC2, D17_cDC2, D21_cDC2, D7_pDC, D10_pDC, D14_pDC, D17_pDC, D21_pDC, D7_Mye, D10_Mye, D14_Mye, D17_Mye, D21_Mye, D7_Mast, D10_Mast, D14_Mast, D17_Mast, D21_Mast, D7_Lymph, D10_Lymph, D14_Lymph, D17_Lymph, D21_Lymph, D7_Ery, D10_Ery, D14_Ery, D17_Ery, D21_Ery,umap1d, cluster_30, patient)
+dt_B <- dt_B[rowSums(dt_B[,1:35])>0,]
+dt_B=dt_B[order(dt_B$umap1d),]
+dt_B=dt_B[order(dt_B$cluster_30),]
+anno_row = select(dt_B, patient, cluster_30,)
+anno_row$cluster_30 <- as.factor(anno_row$cluster_30)
+mat_breaks <- seq(min(dt_B[,1:35]+1), max(dt_B[,1:35]), length.out = 5)
+pheatmap(data.matrix(dt_B[,1:35]),
+         cluster_rows = F, cluster_cols = F, #cutree_rows = 19,
+         annotation_row = anno_row,
+         #scale = "row", clustering_distance_rows = "maximum",
+         color=barcode_col,
+         annotation_colors = list(patient = Group_col,
+                                  cluster_30= cluster_col),
+         border_color = NA,
+         legend = T, annotation_legend = T, show_rownames = F, fontsize = 20,
+         filename = "heatmap_leiden_cluster_PB.pdf", width = 15 , height = 12)
+brewer.pal(8, "Dark2")
+
+cluster_col <- c("1"= "#1B9E77", "2"= "#D95F02", "3"= "#7570B3", "4"= "#E7298A", "5"= "#66A61E", "6"= "#E6AB02", "7"= "#A6761D", "8"= "#666666")
+
+barcode_col= c("0"= "#E4E4E4", "1" =  "#56106EFF", "5.7" = "#9F2A63FF", "10.4"= "#F57D15FF", "15.4"= "#FAC127FF", "19.9"= "#FCFFA4FF")
 
 #Run 1dumap
 u1d <- umap(dt[,1:70] ,metric="cosine", min_dist=0.8, bandwidth=50, n_neighbors=30, negative_sample_rate=20,         spread=10, n_components=1)
