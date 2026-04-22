@@ -49,7 +49,8 @@ rownames(ST223.rna@meta.data) <- ST223.rna@meta.data$cell
 #ST223.rna@meta.data <- select(ST223.rna@meta.data, !cell_ID)
 
 #Check barcodes in common with dataset
-Total_barcodes <- full_join(ST218.1, ST208.1, by = "barcode")
+ST218.1 <- data.frame(barcode = rownames(common.barcodes.cell))
+# made change above, see if rows below make sense.
 Total_barcodes <- separate(Total_barcodes, barcode, c("barcode", "protein"))
 Total_barcodes <- select(Total_barcodes, barcode, protein)
 write.table(Total_barcodes, file= "Total_barcodes.txt", sep="\t", row.names=FALSE, col.names=TRUE)
