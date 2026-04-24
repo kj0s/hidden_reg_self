@@ -1,4 +1,5 @@
 library(RColorBrewer)
+library(ggplot2)
 #Set colour palettes and plot themes
 brewer.pal(8, "Set1")
 pop_col= c(cDC1="#E41A1C", cDC2= "#377EB8", pDC= "#4DAF4A", Mye= "#984EA3", Ery= "#FF7F00", Mast= "#FFFF33", Lymph= "#A65628", Rest= "#F781BF")
@@ -14,8 +15,8 @@ THEME1=theme(text = element_text(size = 20, colour = "black"),
 )
 
 #Load dataset
-all_barcodes.cpm <-read.table("ST223_all_barcodes.cpm.norm.txt", header = TRUE)
-all_barcodes.cell <-read.table("ST223_all_barcodes.cell.norm.txt", header = TRUE)
+all_barcodes.cpm <-read.table("/vast/projects/Sisseq/ST223/ST223_all_barcodes.cpm.norm.txt", header = TRUE)
+all_barcodes.cell <-read.table("/vast/projects/Sisseq/ST223/ST223_all_barcodes.cell.norm.txt", header = TRUE)
 common.cpm <-read.table("ST223_common.barcodes.cpm.txt", header = TRUE)
 common.cell <-read.table("ST223_common.barcodes.cell.txt", header = TRUE)
 
@@ -51,7 +52,7 @@ for (s in Samples)
 names(avg_cpm) = new.names
 avg.common.cpm.barcodes = avg_cpm
 
-## checking if umap is aligned 
+## checking if umap is aligned , returns TRUE, works!
 all(rownames(avg.common.cpm.barcodes) == rownames(avg.common.cell.barcodes))
 
 ## ask if i shld make this into a function ? 
@@ -85,6 +86,10 @@ avg.common.cell.barcodes$barcode <- gsub(" ", "", avg.common.cell.barcodes$barco
 avg.common.cell.barcodes$barcode_donor <- paste("Patient", avg.common.cell.barcodes$patient, avg.common.cell.barcodes$barcode, sep="_")
 add_cluster <- select(avg.common.cell.barcodes, cluster, barcode_donor)
 add_cluster <- add_cluster[!duplicated(add_cluster$barcode_donor), ]
+
+ST223.rna.singlets <- readRDS("/vast/projects/Sisseq/ST223/ST223.rna.singlets.rds")
+library(dplyr)
+library(Seurat)
 ST223.rna.singlets@meta.data <- left_join(ST223.rna.singlets@meta.data, add_cluster, by= "barcode_donor")
 rownames(ST223.rna.singlets@meta.data) <- ST223.rna.singlets@meta.data$cell
 
@@ -92,6 +97,9 @@ Idents(ST223.rna.singlets) <- "cluster"
 DimPlot(ST223.rna.singlets, reduction = "umap")
 
 ST223.rna.singlets.clusters <- subset(ST223.rna.singlets, idents = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
+# raising issue here, Error in WhichCells.Seurat(object = x, cells = cells, idents = idents,  : 
+# Cannot find the following identities in the object: 12345678910
+# STOPPING HERE, TROUBLESHOOT!
 jpeg("umap_bulk_clustering.jpeg", width = 2500, height = 2000, res = 300)
 DimPlot(ST223.rna.singlets.clusters, reduction = "umap")
 dev.off()
@@ -177,10 +185,10 @@ line_plot <- avg.common.cell.barcodes
 line_plot$barcode <- rownames(line_plot)
 line_plot <-  melt(line_plot,id.vars=c("patient", "cluster", "umap1", "umap2", "barcode", "barcode_donor"))
 line_plot= line_plot %>% dplyr::mutate (day = case_when(grepl("D7", variable) ~ "D7",
-                                                          grepl("D10", variable)  ~ "D10",
-                                                          grepl("D14", variable)  ~ "D14",
-                                                          grepl("D17", variable)  ~ "D17",
-                                                          grepl("D21", variable)  ~ "D21"))
+                                                        grepl("D10", variable)  ~ "D10",
+                                                        grepl("D14", variable)  ~ "D14",
+                                                        grepl("D17", variable)  ~ "D17",
+                                                        grepl("D21", variable)  ~ "D21"))
 line_plot$day = factor(line_plot$day, levels = c("D7","D10","D14", "D17", "D21"))
 line_plot$variable <- gsub("D7_", "", line_plot$variable)
 line_plot$variable <- gsub("D10_", "", line_plot$variable)
