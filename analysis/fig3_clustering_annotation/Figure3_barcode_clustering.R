@@ -34,6 +34,28 @@ for (s in Samples)
 names(avg)= new.names
 avg.common.cell.barcodes= avg
 
+## writing code to make avg.common.cpm for use in downstream analysis
+Samples = unique(substr(names(common.cpm[,1:80]), 1, nchar(names(common.cpm[,1:80]))-3))
+
+avg_cpm = data.frame(row.names = row.names(common.cpm))
+new.names = vector()
+
+for (s in Samples)
+{
+  e = as.data.frame(common.cpm[, grep(s, names(common.cpm))])
+  if (ncol(e) < 2) next
+  new.names = c(new.names, substr(names(e)[1], 1, nchar(names(e)[1]) - 3))
+  avg_cpm = cbind(avg_cpm, rowSums(e) / 2)
+}
+
+names(avg_cpm) = new.names
+avg.common.cpm.barcodes = avg_cpm
+
+## checking if umap is aligned 
+all(rownames(avg.common.cpm.barcodes) == rownames(avg.common.cell.barcodes))
+
+## ask if i shld make this into a function ? 
+
 #run kmeans clustering
 #choose numbers of centers that increases cluster compactness
 library(skmeans)
