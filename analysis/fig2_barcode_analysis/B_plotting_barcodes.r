@@ -4,10 +4,6 @@
 # needed files: ST223_common.barcodes.cell.rds, all_time_cell.common.txt [!], tot.common.rds [!], all_barcodes [!], 
 # todo: biomass (made from tot_common) [!]
 
-## ----setup, include=FALSE---------------------------------------------------------------------------------------------------
-knitr::opts_chunk$set(echo = TRUE)
-
-
 ## ---------------------------------------------------------------------------------------------------------------------------
 install.packages("devtools")
 devtools::install_github("vqf/nVennR")
@@ -20,8 +16,6 @@ install.packages("umap")
 install.packages("scatterpie")
 install.packages("randomcoloR")
 
-
-## ---------------------------------------------------------------------------------------------------------------------------
 
 library(ggplot2)
 library(pheatmap)
